@@ -1,0 +1,124 @@
+stages:
+    DataPreprocessing:
+        foreach:
+        - amazon
+        - polarity
+        do:
+            cmd: PYTHONPATH=. python scripts/DataPreprocessing.py "${item}"
+            deps:
+            - scripts/DataPreprocessing.py
+            params:
+            - ${item}.data_source.in_data_directory
+            - ${item}.data_source.all_beauty_source
+            - ${item}.data_source.amazon_fashion_source
+            - ${item}.data_source.appliances_source
+            - ${item}.data_source.clean_data_directory
+            outs:
+            - /app/data/out/Preprocessed_Review_Data_${item}.json
+    DataSplitting:
+        foreach:
+        - amazon
+        - polarity
+        do:
+            cmd: PYTHONPATH=. python scripts/DataSplitting.py "${item}"
+            deps:
+            - /app/data/out/Preprocessed_Review_Data_${item}.json
+            - scripts/DataSplitting.py
+            params:
+            - ${item}.data_source.clean_data_directory
+            - ${item}.split_data.test_directory_data
+            - ${item}.split_data.test_size
+            - ${item}.split_data.train_directory_data
+            outs:
+            - /app/data/train_set/TrainData${item}.json
+            - /app/data/test_set/TestData${item}.json
+
+    FeaturesExtraction:
+        foreach:
+        - amazon
+        - polarity
+        do:
+            cmd: PYTHONPATH=. python scripts/FeaturesExtraction.py "${item}"
+            deps:
+            - /app/data/train_set/TrainData${item}.json
+            - /app/data/test_set/TestData${item}.json
+            - scripts/FeaturesExtraction.py
+            params:
+            - ${item}.feature_extraction.test_feature_extracted
+            - ${item}.feature_extraction.train_feature_extracted
+            - ${item}.feature_extraction.test_features_appended
+            - ${item}.feature_extraction.train_features_appended
+            - ${item}.split_data.test_directory_data
+            - ${item}.split_data.train_directory_data
+            outs:
+            - /app/data/FeaturesExtracted/TestFeaturesExtracted${item}.json
+            - /app/data/FeaturesExtracted/TrainFeaturesExtracted${item}.json
+            - /app/data/FeaturesExtracted/TestFeaturesAppended${item}.json
+            - /app/data/FeaturesExtracted/TrainFeaturesAppended${item}.json
+            - /app/data/FeaturesExtracted/TrainPipeline${item}.json
+            - /app/data/FeaturesExtracted/TestPipeline${item}.json
+
+    ModelLearningAndEvaluation:
+        foreach:
+        - amazon
+        - polarity
+        do:
+            cmd: PYTHONPATH=. python scripts/ModelLearningAndEvaluation.py "${item}"
+            deps:
+            - /app/data/FeaturesExtracted/TestFeaturesExtracted${item}.json
+            - /app/data/FeaturesExtracted/TrainFeaturesExtracted${item}.json
+            - /app/data/FeaturesExtracted/TrainPipeline${item}.json
+            - /app/data/FeaturesExtracted/TestPipeline${item}.json
+            - scripts/ModelLearningAndEvaluation.py
+
+            params:
+            - ${item}.feature_extraction.test_feature_extracted
+            - ${item}.feature_extraction.train_feature_extracted
+            - ${item}.metrics.score_metrics
+            - ${item}.model_training.strategy
+            - ${item}.model_training.scoring
+            - ${item}.model_training.feature_engineering_drop
+            - ${item}.model_training.pca_components_number
+            - ${item}.model_training.vectorizer_max_features
+            - ${item}.model_training.rf_n_estimators
+            - ${item}.model_training.rf_criterion
+            - ${item}.model_training.rf_max_depth
+            - ${item}.model_training.svm_C
+            - ${item}.model_training.svm_kernel
+            - ${item}.model_training.svm_gamma
+
+            metrics:
+            - data/metrics/metrics${item}.json:
+                cache: false
+            outs:
+            - /app/data/reports/metrics_table${item}.md:
+                cache: false
+            - data/reports/hiperparameters_tuning_fig${item}.png:
+                cache: false
+
+    notebook-run:
+        cmd: PYTHONPATH=. jupyter nbconvert --to notebook --execute notebooks/eda_analysis.ipynb
+          --output-dir=./data/reports/
+        deps:
+        - data/FeaturesExtracted/TestFeaturesAppendedamazon.json
+        - data/FeaturesExtracted/TrainFeaturesAppendedamazon.json
+        - notebooks/eda_analysis.ipynb
+        params:
+        - amazon.feature_extraction.test_features_appended
+        - amazon.feature_extraction.train_features_appended
+        - amazon.reports.pandas_report
+        outs:
+        - data/reports/eda_analysis.ipynb:
+            cache: false
+
+    model_explainability-run:
+        cmd: PYTHONPATH=. jupyter nbconvert --to notebook --execute notebooks/model_explainability.ipynb
+          --output-dir=./data/reports/
+        deps:
+        - data/FeaturesExtracted/TrainPipelineamazon.json
+        - data/FeaturesExtracted/TestPipelineamazon.json
+        - notebooks/model_explainability.ipynb
+
+        outs:
+        - data/reports/model_explainability.ipynb:
+            cache: false

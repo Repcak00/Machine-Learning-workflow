@@ -1,0 +1,459 @@
+schema: '2.0'
+stages:
+  DataPreprocessing:
+    cmd: PYTHONPATH=. python scripts/DataPreprocessing.py
+    deps:
+    - path: scripts/DataPreprocessing.py
+      md5: 7b27921db9602adbf4e2bc41b2bba313
+      size: 2952
+    params:
+      params.yaml:
+        data_source.all_beauty_source: /app/data/input/All_Beauty_5.json.gz
+        data_source.amazon_fashion_source: /app/data/input/AMAZON_FASHION_5.json.gz
+        data_source.appliances_source: /app/data/input/Appliances_5.json.gz
+        data_source.clean_data_directory: /app/data/out/Preprocessed_Review_Data.json
+        data_source.in_data_directory: /app/data/input
+    outs:
+    - path: data/out/Preprocessed_Review_Data.json
+      md5: 27c45926ee7c9329c25d670e6c966460
+      size: 27039313
+  ModelLearningAndEvaluation:
+    cmd: PYTHONPATH=. python scripts/ModelLearningAndEvaluation.py
+    deps:
+    - path: data/FeaturesExtracted/TestFeaturesExtracted.json
+      md5: 447b87c856a4afb1de8cc518480ff793
+      size: 111457
+    - path: data/FeaturesExtracted/TestPipeline.json
+      md5: 31cd7fb864d34d871246c8542b4b4462
+      size: 3468083
+    - path: data/FeaturesExtracted/TrainFeaturesExtracted.json
+      md5: 7e7f90055d5e5a0d9045913bc2b82073
+      size: 394450
+    - path: data/FeaturesExtracted/TrainPipeline.json
+      md5: aa883a638c695323dad16b1b61eea5f9
+      size: 11552148
+    - path: scripts/ModelLearningAndEvaluation.py
+      md5: 125800842788d4680f17460322f2fe1a
+      size: 20722
+    params:
+      params.yaml:
+        feature_extraction.test_feature_extracted: /app/data/FeaturesExtracted/TestFeaturesExtracted.json
+        feature_extraction.train_feature_extracted: /app/data/FeaturesExtracted/TrainFeaturesExtracted.json
+        metrics.score_metrics: /app/data/metrics/metrics.json
+        model_training.feature_engineering_drop:
+        - isBoughtForChristmas
+        model_training.pca_components_number: 800
+        model_training.rf_criterion: gini
+        model_training.rf_max_depth: 150
+        model_training.rf_n_estimators: 120
+        model_training.scoring:
+        - f1_micro
+        - accuracy
+        - recall_micro
+        - f1_weighted
+        model_training.strategy: uniform
+        model_training.svm_C: 10
+        model_training.svm_gamma: 0.01
+        model_training.svm_kernel: sigmoid
+        model_training.vectorizer_max_features: 1000
+    outs:
+    - path: data/metrics/metrics.json
+      md5: fcafc49f21b13c9be4f42ac10a8c3ff2
+      size: 1617
+      isexec: true
+    - path: data/reports/hiperparameters_tuning_fig.png
+      md5: d0e2c78a6938ef9c5f33f068f11f1dae
+      size: 23962
+      isexec: true
+    - path: data/reports/metrics_table.md
+      md5: 0e75d047649250d3f36f1d3549fb2be3
+      size: 529
+      isexec: true
+  FeaturesExtraction:
+    cmd: PYTHONPATH=. python scripts/FeaturesExtraction.py
+    deps:
+    - path: data/test_set/TestData.json
+      md5: a9d001a33f6951c3492d51b77433aa25
+      size: 6179756
+    - path: data/train_set/TrainData.json
+      md5: a1f55d2ce0160fac5185618b11de4ffe
+      size: 20656303
+    - path: scripts/FeaturesExtraction.py
+      md5: 07e5037bb8e4de3ef706e9a6125267ac
+      size: 7885
+    params:
+      params.yaml:
+        feature_extraction.test_feature_extracted: /app/data/FeaturesExtracted/TestFeaturesExtracted.json
+        feature_extraction.test_features_appended: /app/data/FeaturesExtracted/TestFeaturesAppended.json
+        feature_extraction.train_feature_extracted: /app/data/FeaturesExtracted/TrainFeaturesExtracted.json
+        feature_extraction.train_features_appended: /app/data/FeaturesExtracted/TrainFeaturesAppended.json
+        split_data.test_directory_data: /app/data/test_set/TestData.json
+        split_data.train_directory_data: /app/data/train_set/TrainData.json
+    outs:
+    - path: data/FeaturesExtracted/TestFeaturesAppended.json
+      md5: 7061fa61562e26860a2bebb68cffb5b0
+      size: 6367126
+    - path: data/FeaturesExtracted/TestFeaturesExtracted.json
+      md5: 447b87c856a4afb1de8cc518480ff793
+      size: 111457
+    - path: data/FeaturesExtracted/TestPipeline.json
+      md5: 31cd7fb864d34d871246c8542b4b4462
+      size: 3468083
+    - path: data/FeaturesExtracted/TrainFeaturesAppended.json
+      md5: 9cfc3ee984d291f1bec7ffb5cc5a3bc1
+      size: 21315687
+    - path: data/FeaturesExtracted/TrainFeaturesExtracted.json
+      md5: 7e7f90055d5e5a0d9045913bc2b82073
+      size: 394450
+    - path: data/FeaturesExtracted/TrainPipeline.json
+      md5: aa883a638c695323dad16b1b61eea5f9
+      size: 11552148
+  DataSplitting:
+    cmd: PYTHONPATH=. python scripts/DataSplitting.py
+    deps:
+    - path: data/out/Preprocessed_Review_Data.json
+      md5: 27c45926ee7c9329c25d670e6c966460
+      size: 27039313
+    - path: scripts/DataSplitting.py
+      md5: 405e4ed650782be2032393ddb28b7581
+      size: 1884
+      isexec: true
+    params:
+      params.yaml:
+        data_source.clean_data_directory: /app/data/out/Preprocessed_Review_Data.json
+        split_data.test_directory_data: /app/data/test_set/TestData.json
+        split_data.test_size: 0.23
+        split_data.train_directory_data: /app/data/train_set/TrainData.json
+    outs:
+    - path: data/test_set/TestData.json
+      md5: a9d001a33f6951c3492d51b77433aa25
+      size: 6179756
+      isexec: true
+    - path: data/train_set/TrainData.json
+      md5: a1f55d2ce0160fac5185618b11de4ffe
+      size: 20656303
+      isexec: true
+  notebook-run:
+    cmd: PYTHONPATH=. jupyter nbconvert --to notebook --execute notebooks/eda_analysis.ipynb
+      --output-dir=./data/reports/
+    deps:
+    - path: data/FeaturesExtracted/TestFeaturesAppendedamazon.json
+      md5: 7061fa61562e26860a2bebb68cffb5b0
+      size: 6367126
+    - path: data/FeaturesExtracted/TrainFeaturesAppendedamazon.json
+      md5: 9cfc3ee984d291f1bec7ffb5cc5a3bc1
+      size: 21315687
+    - path: notebooks/eda_analysis.ipynb
+      md5: 1f0dc27d217cb5b86c686b4c2b9addfa
+      size: 16000
+      isexec: true
+    params:
+      params.yaml:
+        amazon.feature_extraction.test_features_appended: /app/data/FeaturesExtracted
+        amazon.feature_extraction.train_features_appended: /app/data/FeaturesExtracted
+        amazon.reports.pandas_report: /app/data/reports/eda_raport_pandas.html
+    outs:
+    - path: data/reports/eda_analysis.ipynb
+      md5: 5f410d5be14ee0e05ee4b65630b45202
+      size: 1094195
+      isexec: true
+  model_explainability-run:
+    cmd: PYTHONPATH=. jupyter nbconvert --to notebook --execute notebooks/model_explainability.ipynb
+      --output-dir=./data/reports/
+    deps:
+    - path: data/FeaturesExtracted/TestPipelineamazon.json
+      md5: 31cd7fb864d34d871246c8542b4b4462
+      size: 3468083
+    - path: data/FeaturesExtracted/TrainPipelineamazon.json
+      md5: aa883a638c695323dad16b1b61eea5f9
+      size: 11552148
+    - path: notebooks/model_explainability.ipynb
+      md5: 4bc078f066e0fd7a69667adba38e6774
+      size: 1346758
+      isexec: true
+    outs:
+    - path: data/reports/model_explainability.ipynb
+      md5: a0c6e9bf53a95774a169126606149d1d
+      size: 1471669
+      isexec: true
+  DataPreprocessing@amazon:
+    cmd: PYTHONPATH=. python scripts/DataPreprocessing.py "amazon"
+    deps:
+    - path: scripts/DataPreprocessing.py
+      md5: a0567e1b07ac52c0415d237687c8f414
+      size: 4362
+    params:
+      params.yaml:
+        amazon.data_source.all_beauty_source: /app/data/input/All_Beauty_5.json.gz
+        amazon.data_source.amazon_fashion_source: /app/data/input/AMAZON_FASHION_5.json.gz
+        amazon.data_source.appliances_source: /app/data/input/Appliances_5.json.gz
+        amazon.data_source.clean_data_directory: /app/data/out
+        amazon.data_source.in_data_directory: /app/data/input
+    outs:
+    - path: data/out/Preprocessed_Review_Data_amazon.json
+      md5: 27c45926ee7c9329c25d670e6c966460
+      size: 27039313
+      isexec: true
+  DataSplitting@amazon:
+    cmd: PYTHONPATH=. python scripts/DataSplitting.py "amazon"
+    deps:
+    - path: data/out/Preprocessed_Review_Data_amazon.json
+      md5: 27c45926ee7c9329c25d670e6c966460
+      size: 27039313
+    - path: scripts/DataSplitting.py
+      md5: e5fa41baaeec27768871f61423ec16ac
+      size: 1951
+    params:
+      params.yaml:
+        amazon.data_source.clean_data_directory: /app/data/out
+        amazon.split_data.test_directory_data: /app/data/test_set
+        amazon.split_data.test_size: 0.23
+        amazon.split_data.train_directory_data: /app/data/train_set
+    outs:
+    - path: data/test_set/TestDataamazon.json
+      md5: a9d001a33f6951c3492d51b77433aa25
+      size: 6179756
+      isexec: true
+    - path: data/train_set/TrainDataamazon.json
+      md5: a1f55d2ce0160fac5185618b11de4ffe
+      size: 20656303
+      isexec: true
+  FeaturesExtraction@amazon:
+    cmd: PYTHONPATH=. python scripts/FeaturesExtraction.py "amazon"
+    deps:
+    - path: data/test_set/TestDataamazon.json
+      md5: a9d001a33f6951c3492d51b77433aa25
+      size: 6179756
+    - path: data/train_set/TrainDataamazon.json
+      md5: a1f55d2ce0160fac5185618b11de4ffe
+      size: 20656303
+    - path: scripts/FeaturesExtraction.py
+      md5: 123972ec8d8f3a0a68fcefc1bbdae659
+      size: 8584
+    params:
+      params.yaml:
+        amazon.feature_extraction.test_feature_extracted: /app/data/FeaturesExtracted
+        amazon.feature_extraction.test_features_appended: /app/data/FeaturesExtracted
+        amazon.feature_extraction.train_feature_extracted: /app/data/FeaturesExtracted
+        amazon.feature_extraction.train_features_appended: /app/data/FeaturesExtracted
+        amazon.split_data.test_directory_data: /app/data/test_set
+        amazon.split_data.train_directory_data: /app/data/train_set
+    outs:
+    - path: data/FeaturesExtracted/TestFeaturesAppendedamazon.json
+      md5: 7061fa61562e26860a2bebb68cffb5b0
+      size: 6367126
+      isexec: true
+    - path: data/FeaturesExtracted/TestFeaturesExtractedamazon.json
+      md5: 447b87c856a4afb1de8cc518480ff793
+      size: 111457
+      isexec: true
+    - path: data/FeaturesExtracted/TestPipelineamazon.json
+      md5: 31cd7fb864d34d871246c8542b4b4462
+      size: 3468083
+      isexec: true
+    - path: data/FeaturesExtracted/TrainFeaturesAppendedamazon.json
+      md5: 9cfc3ee984d291f1bec7ffb5cc5a3bc1
+      size: 21315687
+      isexec: true
+    - path: data/FeaturesExtracted/TrainFeaturesExtractedamazon.json
+      md5: 7e7f90055d5e5a0d9045913bc2b82073
+      size: 394450
+      isexec: true
+    - path: data/FeaturesExtracted/TrainPipelineamazon.json
+      md5: aa883a638c695323dad16b1b61eea5f9
+      size: 11552148
+      isexec: true
+  DataPreprocessing@polarity:
+    cmd: PYTHONPATH=. python scripts/DataPreprocessing.py "polarity"
+    deps:
+    - path: scripts/DataPreprocessing.py
+      md5: a0567e1b07ac52c0415d237687c8f414
+      size: 4362
+      isexec: true
+    params:
+      params.yaml:
+        polarity.data_source.all_beauty_source: None
+        polarity.data_source.amazon_fashion_source: None
+        polarity.data_source.appliances_source: None
+        polarity.data_source.clean_data_directory: /app/data/out
+        polarity.data_source.in_data_directory: /app/data/input/rt-polaritydata
+    outs:
+    - path: data/out/Preprocessed_Review_Data_polarity.json
+      md5: af60503178298c56aa461a3202e37514
+      size: 1550175
+      isexec: true
+  DataSplitting@polarity:
+    cmd: PYTHONPATH=. python scripts/DataSplitting.py "polarity"
+    deps:
+    - path: data/out/Preprocessed_Review_Data_polarity.json
+      md5: af60503178298c56aa461a3202e37514
+      size: 1550175
+    - path: scripts/DataSplitting.py
+      md5: e5fa41baaeec27768871f61423ec16ac
+      size: 1951
+      isexec: true
+    params:
+      params.yaml:
+        polarity.data_source.clean_data_directory: /app/data/out
+        polarity.split_data.test_directory_data: /app/data/test_set
+        polarity.split_data.test_size: 0.23
+        polarity.split_data.train_directory_data: /app/data/train_set
+    outs:
+    - path: data/test_set/TestDatapolarity.json
+      md5: d251e6c672a93c9c5b276f3b2616950f
+      size: 324010
+      isexec: true
+    - path: data/train_set/TrainDatapolarity.json
+      md5: 5371934285640ab108f621d1cd241c41
+      size: 1104498
+      isexec: true
+  FeaturesExtraction@polarity:
+    cmd: PYTHONPATH=. python scripts/FeaturesExtraction.py "polarity"
+    deps:
+    - path: data/test_set/TestDatapolarity.json
+      md5: d251e6c672a93c9c5b276f3b2616950f
+      size: 324010
+    - path: data/train_set/TrainDatapolarity.json
+      md5: 5371934285640ab108f621d1cd241c41
+      size: 1104498
+    - path: scripts/FeaturesExtraction.py
+      md5: 123972ec8d8f3a0a68fcefc1bbdae659
+      size: 8584
+      isexec: true
+    params:
+      params.yaml:
+        polarity.feature_extraction.test_feature_extracted: /app/data/FeaturesExtracted
+        polarity.feature_extraction.test_features_appended: /app/data/FeaturesExtracted
+        polarity.feature_extraction.train_feature_extracted: /app/data/FeaturesExtracted
+        polarity.feature_extraction.train_features_appended: /app/data/FeaturesExtracted
+        polarity.split_data.test_directory_data: /app/data/test_set
+        polarity.split_data.train_directory_data: /app/data/train_set
+    outs:
+    - path: data/FeaturesExtracted/TestFeaturesAppendedpolarity.json
+      md5: d251e6c672a93c9c5b276f3b2616950f
+      size: 324010
+      isexec: true
+    - path: data/FeaturesExtracted/TestFeaturesExtractedpolarity.json
+      md5: 7680b10fcfdc8e21f3268110961e45a0
+      size: 49318
+      isexec: true
+    - path: data/FeaturesExtracted/TestPipelinepolarity.json
+      md5: 5e19ead2e340e9488350e7e2ddb1e444
+      size: 231416
+      isexec: true
+    - path: data/FeaturesExtracted/TrainFeaturesAppendedpolarity.json
+      md5: 5371934285640ab108f621d1cd241c41
+      size: 1104498
+      isexec: true
+    - path: data/FeaturesExtracted/TrainFeaturesExtractedpolarity.json
+      md5: f3c1302283f83b25d2d7864ad31eec63
+      size: 170194
+      isexec: true
+    - path: data/FeaturesExtracted/TrainPipelinepolarity.json
+      md5: 53edfe72015e933bc54fb8b9b7a0d1c6
+      size: 789581
+      isexec: true
+  ModelLearningAndEvaluation@amazon:
+    cmd: PYTHONPATH=. python scripts/ModelLearningAndEvaluation.py "amazon"
+    deps:
+    - path: data/FeaturesExtracted/TestFeaturesExtractedamazon.json
+      md5: 447b87c856a4afb1de8cc518480ff793
+      size: 111457
+    - path: data/FeaturesExtracted/TestPipelineamazon.json
+      md5: 31cd7fb864d34d871246c8542b4b4462
+      size: 3468083
+    - path: data/FeaturesExtracted/TrainFeaturesExtractedamazon.json
+      md5: 7e7f90055d5e5a0d9045913bc2b82073
+      size: 394450
+    - path: data/FeaturesExtracted/TrainPipelineamazon.json
+      md5: aa883a638c695323dad16b1b61eea5f9
+      size: 11552148
+    - path: scripts/ModelLearningAndEvaluation.py
+      md5: 4513d43699955c621bb96cb07fb48e2b
+      size: 23739
+      isexec: true
+    params:
+      params.yaml:
+        amazon.feature_extraction.test_feature_extracted: /app/data/FeaturesExtracted
+        amazon.feature_extraction.train_feature_extracted: /app/data/FeaturesExtracted
+        amazon.metrics.score_metrics: data/metrics
+        amazon.model_training.feature_engineering_drop:
+        - isBoughtForChristmas
+        amazon.model_training.pca_components_number: 800
+        amazon.model_training.rf_criterion: entropy
+        amazon.model_training.rf_max_depth: 200
+        amazon.model_training.rf_n_estimators: 120
+        amazon.model_training.scoring:
+        - f1_micro
+        - accuracy
+        - recall_micro
+        - f1_weighted
+        amazon.model_training.strategy: uniform
+        amazon.model_training.svm_C: 10
+        amazon.model_training.svm_gamma: 0.01
+        amazon.model_training.svm_kernel: sigmoid
+        amazon.model_training.vectorizer_max_features: 1200
+    outs:
+    - path: data/metrics/metricsamazon.json
+      md5: 2a9503ebe3638763e589b1018a2403af
+      size: 1613
+      isexec: true
+    - path: data/reports/hiperparameters_tuning_figamazon.png
+      md5: e040bf515cc06519820e03babecea7ec
+      size: 24015
+      isexec: true
+    - path: data/reports/metrics_tableamazon.md
+      md5: 6cf987af1f3cfbdfcc90b8ccc8c1f213
+      size: 529
+      isexec: true
+  ModelLearningAndEvaluation@polarity:
+    cmd: PYTHONPATH=. python scripts/ModelLearningAndEvaluation.py "polarity"
+    deps:
+    - path: data/FeaturesExtracted/TestFeaturesExtractedpolarity.json
+      md5: 7680b10fcfdc8e21f3268110961e45a0
+      size: 49318
+    - path: data/FeaturesExtracted/TestPipelinepolarity.json
+      md5: 5e19ead2e340e9488350e7e2ddb1e444
+      size: 231416
+    - path: data/FeaturesExtracted/TrainFeaturesExtractedpolarity.json
+      md5: f3c1302283f83b25d2d7864ad31eec63
+      size: 170194
+    - path: data/FeaturesExtracted/TrainPipelinepolarity.json
+      md5: 53edfe72015e933bc54fb8b9b7a0d1c6
+      size: 789581
+    - path: scripts/ModelLearningAndEvaluation.py
+      md5: 4513d43699955c621bb96cb07fb48e2b
+      size: 23739
+    params:
+      params.yaml:
+        polarity.feature_extraction.test_feature_extracted: /app/data/FeaturesExtracted
+        polarity.feature_extraction.train_feature_extracted: /app/data/FeaturesExtracted
+        polarity.metrics.score_metrics: data/metrics
+        polarity.model_training.feature_engineering_drop: []
+        polarity.model_training.pca_components_number: 25
+        polarity.model_training.rf_criterion: entropy
+        polarity.model_training.rf_max_depth: 200
+        polarity.model_training.rf_n_estimators: 180
+        polarity.model_training.scoring:
+        - f1_micro
+        - accuracy
+        - recall_micro
+        - f1_weighted
+        polarity.model_training.strategy: uniform
+        polarity.model_training.svm_C: 10
+        polarity.model_training.svm_gamma: 0.01
+        polarity.model_training.svm_kernel: linear
+        polarity.model_training.vectorizer_max_features: 800
+    outs:
+    - path: data/metrics/metricspolarity.json
+      md5: deee5bac1bfafd84b5932e4c644e00a6
+      size: 1156
+      isexec: true
+    - path: data/reports/hiperparameters_tuning_figpolarity.png
+      md5: 97472522dc6f2cd2be74a89f8c3def50
+      size: 20657
+      isexec: true
+    - path: data/reports/metrics_tablepolarity.md
+      md5: 2689a5fc9cbed29c25ab3d29d03ee712
+      size: 529
+      isexec: true

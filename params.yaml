@@ -1,0 +1,119 @@
+amazon:
+    data_source:
+        in_data_directory: /app/data/input
+        all_beauty_source: /app/data/input/All_Beauty_5.json.gz
+        amazon_fashion_source: /app/data/input/AMAZON_FASHION_5.json.gz
+        appliances_source: /app/data/input/Appliances_5.json.gz
+        software_source: /app/data/input/Software_5.json.gz
+        clean_data_directory: /app/data/out
+    split_data:
+        test_directory_data: /app/data/test_set
+        train_directory_data: /app/data/train_set
+        test_size: 0.23
+
+    feature_extraction:
+        test_feature_extracted: /app/data/FeaturesExtracted
+        train_feature_extracted: /app/data/FeaturesExtracted
+        test_features_appended: /app/data/FeaturesExtracted
+        train_features_appended: /app/data/FeaturesExtracted
+        train_pipeline: /app/data/FeaturesExtracted
+        test_pipeline: /app/data/FeaturesExtracted
+
+        y_name: overall
+        text_columns:
+        - reviewText
+        - summary
+        exclude_columns:
+        - reviewTime
+        - reviewerID
+        - asin
+        - reviewerName
+        categorical_columns:
+        - verified
+        - isBoughtForChristmas
+        - category
+        - vote
+        - verified
+        numerical_columns:
+        - unixReviewTime
+        - reviewLength
+        - freshness
+
+    reports:
+        pandas_report: /app/data/reports/eda_raport_pandas.html
+        markdown_table: /app/data/reports
+        hiperparameters_tuning: data/reports
+
+    model_training:
+        strategy: uniform
+        scoring:
+        - f1_micro
+        - accuracy
+        - recall_micro
+        - f1_weighted
+        feature_engineering_drop:
+        - isBoughtForChristmas
+        pca_components_number: 800
+        vectorizer_max_features: 1200
+        rf_n_estimators: 120
+        rf_criterion: entropy
+        rf_max_depth: 200
+        svm_C: 10
+        svm_kernel: sigmoid
+        svm_gamma: 0.01
+
+    metrics:
+        score_metrics: data/metrics
+
+polarity:
+    data_source:
+        in_data_directory: /app/data/input/rt-polaritydata
+        all_beauty_source: None
+        amazon_fashion_source: None
+        appliances_source: None
+        software_source: None
+        clean_data_directory: /app/data/out
+    split_data:
+        test_directory_data: /app/data/test_set
+        train_directory_data: /app/data/train_set
+        test_size: 0.23
+
+    feature_extraction:
+        test_feature_extracted: /app/data/FeaturesExtracted
+        train_feature_extracted: /app/data/FeaturesExtracted
+        test_features_appended: /app/data/FeaturesExtracted
+        train_features_appended: /app/data/FeaturesExtracted
+        train_pipeline: /app/data/FeaturesExtracted
+        test_pipeline: /app/data/FeaturesExtracted
+
+        y_name: overall
+        text_columns:
+        - reviewText
+        exclude_columns: []
+        categorical_columns: []
+        numerical_columns: []
+
+    reports:
+        pandas_report: ""
+        markdown_table: /app/data/reports
+        hiperparameters_tuning: data/reports
+
+    model_training:
+        strategy: uniform
+        scoring:
+        - f1_micro
+        - accuracy
+        - recall_micro
+        - f1_weighted
+        feature_engineering_drop: []
+        pca_components_number: 25
+        vectorizer_max_features: 800
+        rf_n_estimators: 180
+        rf_criterion: entropy
+        rf_max_depth: 200
+        svm_C: 10
+        svm_kernel: linear
+        svm_gamma: 0.01
+
+    metrics:
+        score_metrics: data/metrics
